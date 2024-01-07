@@ -23,7 +23,7 @@ export default function MyMap(props: any) {
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
-          const parsedGeoJson = JSON.parse(e.target.result);
+          const parsedGeoJson = JSON.parse(e.target.result.toString());
 
           console.log(
             { parsedGeoJson },
@@ -99,7 +99,7 @@ export default function MyMap(props: any) {
     <MapManagerContainer>
       <input type="file" onChange={handleFileUpload} />
       <MapContainer
-        center={mapPosition}
+        center={[mapPosition[1], mapPosition[0]]}
         zoom={zoom}
         style={{ height: "400px", width: "100%", zIndex: 1 }}
       >
