@@ -33,8 +33,8 @@ export default function Home({ data }) {
     <AlternateHomePageWrapper>
       <SEOHead
         isHomePage={true}
-        metaTitle="Mesh - Blockchain, Crypto, Web3 Data Explorer and Community"
-        metaDescription="Crypto and blockchain data explorer, allowing users to build communities centered around their favorite assets with financial, social, and on-chain metrics"
+        metaTitle="Mesh - GIS Data Viewer"
+        metaDescription="View GeoJson and Wkt data on a map."
         previewImage="/assets/assets-page.png"
       />
 
