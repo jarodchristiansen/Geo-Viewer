@@ -1,92 +1,87 @@
+import type { GeoJsonObject } from "geojson";
 import { useEffect, useMemo, useState } from "react";
+import type { ChangeEvent } from "react";
 import { GeoJSON, MapContainer, TileLayer, useMap } from "react-leaflet";
 import styled from "styled-components";
 
 import "leaflet-defaulticon-compatibility";
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
-import "leaflet/dist/leaflet.css";
+// Do not import leaflet/dist/leaflet.css here: the published leaflet package omits
+// dist/images/*.png, so webpack cannot resolve url(...) in that stylesheet. Core
+// Leaflet CSS is loaded globally via <link> in pages/_app.tsx (CDN matches package version).
 
-export default function MyMap(props: any) {
+type LngLat = [number, number];
+
+function RecenterAutomatically({ lat, lng }: { lat: number; lng: number }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+      map.setView([lat, lng]);
+    }
+  }, [lat, lng, map]);
+
+  return null;
+}
+
+function readTextFromLoadEvent(e: ProgressEvent<FileReader>): string | null {
+  const target = e.target;
+  if (!(target instanceof FileReader)) return null;
+  const { result } = target;
+  return typeof result === "string" ? result : null;
+}
+
+export default function MyMap() {
   const zoom = 11;
 
-  // Need to figure out where inversion is in upload process
-  const position = [-0.09, 51.505];
+  // [lng, lat] — Leaflet MapContainer uses [lat, lng], swapped below
+  const position: LngLat = [-0.09, 51.505];
 
-  const [geoJsonData, setGeoJsonData] = useState(null);
-  const [mapPosition, setMapPosition] = useState(position);
+  const [geoJsonData, setGeoJsonData] = useState<GeoJsonObject | null>(null);
+  const [mapPosition, setMapPosition] = useState<LngLat>(position);
 
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0];
+  const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     setGeoJsonData(null);
 
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const parsedGeoJson = JSON.parse(e.target.result.toString());
+    if (!file) return;
 
-          console.log(
-            { parsedGeoJson },
-            "geoJsonData in set geoJson Data hook"
-          );
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const text = readTextFromLoadEvent(e);
+        if (text == null) return;
 
-          setGeoJsonData(parsedGeoJson);
+        const parsedGeoJson = JSON.parse(text) as {
+          features?: { geometry?: { coordinates?: number[][][] } }[];
+          geometry?: { coordinates?: number[][][] };
+        };
 
-          // Check the GeoJSON type and extract coordinates accordingly
-          let coordinates = [];
+        setGeoJsonData(parsedGeoJson as GeoJsonObject);
 
-          if (parsedGeoJson.features) {
-            // Assuming it's a FeatureCollection with MultiPolygon
-            coordinates = parsedGeoJson.features[0].geometry.coordinates[0];
-          } else if (parsedGeoJson.geometry?.coordinates) {
-            // Assuming it's a Polygon
-            coordinates = parsedGeoJson.geometry.coordinates[0];
-          }
+        let ring: number[][] = [];
 
-          // Calculate the center of the polygon
-          const center = coordinates.reduce(
-            (acc, coord) => {
-              acc[0] += coord[0];
-              acc[1] += coord[1];
-              return acc;
-            },
-            [0, 0]
-          );
-
-          const formattedCenter = coordinates[0];
-
-          // Now, you can set the map center to the calculated center
-          const newMapPosition = {
-            center: formattedCenter,
-          };
-
-          // Update the map position using the above information
-          setMapPosition(newMapPosition.center);
-        } catch (error) {
-          console.error("Error parsing GeoJSON file:", error);
+        if (parsedGeoJson.features?.[0]?.geometry?.coordinates?.[0]) {
+          ring = parsedGeoJson.features[0].geometry.coordinates[0];
+        } else if (parsedGeoJson.geometry?.coordinates?.[0]) {
+          ring = parsedGeoJson.geometry.coordinates[0];
         }
-      };
 
-      reader.readAsText(file);
-    }
-  };
+        if (ring.length === 0) return;
 
-  const RecenterAutomatically = ({ lat = 1, lng = 1 }) => {
-    const map = useMap();
-
-    useEffect(() => {
-      if (!Array.isArray(lat) && !isNaN(lat) && !isNaN(lng)) {
-        console.log({ lat, lng }, "IN RECENTER AUTOMATICALLY");
-
-        //   map.setView([lat[1], lat[0]]);
-        map.setView([lat, lng]);
-      } else {
-        console.error("Invalid latitude and longitude values:", lat, lng);
-        map.setView([lat[1], lat[0]]);
+        const [sumLng, sumLat] = ring.reduce<[number, number]>(
+          (acc, coord) => [acc[0] + coord[0], acc[1] + coord[1]],
+          [0, 0]
+        );
+        const n = ring.length;
+        const centroid: LngLat = [sumLng / n, sumLat / n];
+        setMapPosition(centroid);
+      } catch (error) {
+        console.error("Error parsing GeoJSON file:", error);
       }
-    }, [lat, lng]);
+    };
 
-    return null;
+    reader.readAsText(file);
   };
 
   const GeoJsonComponent = useMemo(() => {
@@ -108,13 +103,10 @@ export default function MyMap(props: any) {
             OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png"
         />
-        {/* {geoJsonData && <GeoJSON data={geoJsonData} />} */}
         {GeoJsonComponent}
 
         <RecenterAutomatically lat={mapPosition[1]} lng={mapPosition[0]} />
       </MapContainer>
-
-      {/* {Map} */}
     </MapManagerContainer>
   );
 }

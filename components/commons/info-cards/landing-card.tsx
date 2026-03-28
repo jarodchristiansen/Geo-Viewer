@@ -19,40 +19,12 @@ const LandingCard = ({
 }: LandingCardProps) => {
   const router = useRouter();
 
-  const routeToAuth = (string) => {
-    router.push(`/auth?path=${string}`);
-  };
-
-  const routeToEducation = () => {
-    router.push("/education");
+  const routeToAuth = (path: string) => {
+    router.push(`/auth?path=${path}`);
   };
 
   return (
     <InfoCardContainer renderSignIn={renderSignIn}>
-      {/* {!!renderSignIn && (
-        <>
-          <CommunityIconContainer right>
-            <Image
-              src={"/assets/community.svg"}
-              width={80}
-              height={80}
-              layout="responsive"
-              alt="community icon"
-            />
-          </CommunityIconContainer>
-
-          <CommunityIconContainer>
-            <Image
-              src={"/assets/community.svg"}
-              width={80}
-              height={80}
-              layout="responsive"
-              alt="community icon"
-            />
-          </CommunityIconContainer>
-        </>
-      )} */}
-
       <div className="info-card-header">
         <h2 className="heading-text">{headerText}</h2>
         <h2 className="subheading-text">{header2Text}</h2>
@@ -62,65 +34,46 @@ const LandingCard = ({
         <span className="body-text">{bodyText}</span>
       </div>
 
-      {!!renderSignIn && (
+      {renderSignIn ? (
         <div className="button-container">
           <button
+            type="button"
             className="secondary-button"
             onClick={() => routeToAuth("SignUp")}
           >
             Sign Up
           </button>
           <button
+            type="button"
             className="standardized-button"
             onClick={() => routeToAuth("SignIn")}
           >
             Sign In
           </button>
         </div>
-      )}
+      ) : null}
 
-      {/* {!!renderLearnMore && (
+      {renderLearnMore ? (
         <div className="button-container">
           <CTAButton
+            type="button"
             className="standardized-button"
-            onClick={() => routeToEducation()}
+            onClick={() => router.push("/education")}
           >
             Our Story
           </CTAButton>
           <CTAButton
+            type="button"
             className="secondary-button"
-            onClick={() => routeToEducation()}
+            onClick={() => router.push("/education")}
           >
             Web3
           </CTAButton>
         </div>
-      )} */}
+      ) : null}
     </InfoCardContainer>
   );
 };
-
-interface CommunityIconProps {
-  right?: boolean;
-}
-
-const CommunityIconContainer = styled.div<CommunityIconProps>`
-  display: none;
-
-  @media ${MediaQueries.MD} {
-    display: flex;
-    position: absolute;
-    border: 2px solid black;
-    border-radius: 50%;
-    top: 2rem;
-    right: ${(props) => (props.right ? "3rem" : "unset")};
-    left: ${(props) => (props.right ? "unset" : "3rem")};
-    background-color: #e7d3ff;
-
-    img {
-      max-height: 7rem;
-    }
-  }
-`;
 
 interface InfoCardContainerProps {
   renderSignIn: boolean;
@@ -149,9 +102,8 @@ const InfoCardContainer = styled.div<InfoCardContainerProps>`
 
     span {
       font-size: 20px;
-      color: ${(props) => (props.renderSignIn ? Colors.white : Colors.white)};
-      font-style: italic;
-      font-style: ${(props) => props.renderSignIn && "normal"};
+      color: ${Colors.white};
+      font-style: ${(props) => (props.renderSignIn ? "normal" : "italic")};
     }
   }
 

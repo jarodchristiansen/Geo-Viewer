@@ -1,42 +1,48 @@
 import { Colors, MediaQueries } from "@/styles/variables";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect, useMemo, useState } from "react";
-import { Container, Nav, Navbar } from "react-bootstrap";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Container, Navbar } from "react-bootstrap";
 import styled from "styled-components";
 
-/**
- *
- * @returns Header component above pages
- */
+type RouteItem = {
+  key: number;
+  route: string;
+  guarded: boolean;
+  text: string;
+};
+
 function Header() {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const [selectedRoute, setSelectedRoute] = useState<string | number>("");
 
   const router = useRouter();
   const { asPath } = router;
 
-  const handleSignin = (e) => {
-    e.preventDefault();
-    signIn();
-  };
-  const handleSignout = (e) => {
+  const handleSignout = (e: React.MouseEvent) => {
     e.preventDefault();
     setSelectedRoute("");
-    signOut();
+    void signOut();
   };
 
-  const handleSelect = (selectedKey) => {
-    setSelectedRoute(selectedKey);
-  };
+  const userRecord = session?.user as
+    | { id?: string; username?: string }
+    | undefined;
+  const id = userRecord?.id ?? userRecord?.username;
 
-  // @ts-ignore: next-auth type issue v3
-  let id = session?.user?.username;
-
-  const routes = [
-    { key: 1, route: `/user/${id}`, guarded: false, text: "Profile" },
+  const routes: (RouteItem | false)[] = [
+    ...(id
+      ? [
+          {
+            key: 1,
+            route: `/user/${id}`,
+            guarded: false,
+            text: "Profile",
+          },
+        ]
+      : []),
     { key: 2, route: `/now-playing`, guarded: false, text: "Stream" },
     !session && {
       key: 3,
@@ -46,55 +52,42 @@ function Header() {
     },
   ];
 
-  useEffect(() => {
-    setRouterAsPath();
-  }, [asPath]);
+  const routeList = routes.filter((r): r is RouteItem => Boolean(r));
 
-  const setRouterAsPath = () => {
-    let matchingRoute = routes.filter((item) => asPath.includes(item.route));
+  const setRouterAsPath = useCallback(() => {
+    const matchingRoute = routeList.filter((item) =>
+      asPath.includes(item.route)
+    );
 
-    if (matchingRoute.length) {
+    if (matchingRoute.length > 0) {
       setSelectedRoute(matchingRoute[0].key);
     }
-  };
+  }, [asPath, routeList]);
+
+  useEffect(() => {
+    setRouterAsPath();
+  }, [setRouterAsPath]);
 
   const routeObjects = useMemo(() => {
-    if (!routes?.length) return [];
+    if (!routeList.length) return [];
 
-    return routes.map((route, idx) => {
-      if (!route?.key) return;
-
-      return (
-        <div key={route?.route}>
-          {!!route.guarded && !!session && (
-            <TextContainer>
-              <Nav.Link href={route.route}>{route.text}</Nav.Link>
-              {selectedRoute == route.key && (
-                <span className="active-underline-span"></span>
-              )}
-            </TextContainer>
-          )}
-
-          {!route.guarded && (
-            <TextContainer>
-              <Nav.Link href={route.route}>{route.text}</Nav.Link>
-              {selectedRoute == route.key && (
-                <span className="active-underline-span"></span>
-              )}
-            </TextContainer>
-          )}
-        </div>
-      );
-    });
-  }, [routes?.length, selectedRoute, session]);
+    return routeList.map((route) => (
+      <div key={route.route}>
+        <TextContainer>
+          <NavTextLink href={route.route}>{route.text}</NavTextLink>
+          {selectedRoute === route.key ? (
+            <span className="active-underline-span" />
+          ) : null}
+        </TextContainer>
+      </div>
+    ));
+  }, [routeList, selectedRoute]);
 
   return (
     <Navbar
       collapseOnSelect
       expand="lg"
-      // bg="dark"
       variant="dark"
-      onSelect={handleSelect}
       className="navbar-main"
       style={{
         backgroundColor: Colors.midnight,
@@ -105,14 +98,14 @@ function Header() {
       }}
     >
       <Container>
-        <Navbar.Brand onClick={() => setSelectedRoute("")}>
-          <Link href={"/"} passHref legacyBehavior>
+        <Navbar.Brand as="div">
+          <Link href="/" aria-label="Home">
             <Image
               src={"/assets/cube-svgrepo-com.svg"}
               className={"pointer-link"}
               height={50}
               width={50}
-              alt="block-logo"
+              alt="Home"
             />
           </Link>
         </Navbar.Brand>
@@ -120,22 +113,34 @@ function Header() {
         <Navbar.Collapse id="responsive-navbar-nav">
           <RouteRow>
             {routeObjects}
-            {session && (
-              <Nav.Link
-                eventKey={"5"}
-                role={"link"}
+            {session ? (
+              <SignOutButton
+                type="button"
                 onClick={handleSignout}
                 className={"pointer-link fw-bold"}
               >
-                <SignOutSpan>{"Sign Out"}</SignOutSpan>
-              </Nav.Link>
-            )}
+                <SignOutSpan>Sign Out</SignOutSpan>
+              </SignOutButton>
+            ) : null}
           </RouteRow>
         </Navbar.Collapse>
       </Container>
     </Navbar>
   );
 }
+
+const NavTextLink = styled(Link)`
+  color: ${Colors.white};
+  font-weight: bold;
+  text-decoration: none;
+`;
+
+const SignOutButton = styled.button`
+  background: none;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+`;
 
 const RouteRow = styled.div`
   display: flex;
@@ -162,12 +167,6 @@ const SignOutSpan = styled.span`
 const TextContainer = styled.div`
   display: flex;
   flex-direction: column;
-
-  a {
-    color: ${Colors.white};
-    font-weight: bold;
-    text-decoration: none;
-  }
 
   .active-underline-span {
     height: 2px;

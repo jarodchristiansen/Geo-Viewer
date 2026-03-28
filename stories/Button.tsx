@@ -32,7 +32,7 @@ export const Button = ({
   size = "medium",
   backgroundColor,
   label,
-  ...props
+  onClick,
 }: ButtonProps) => {
   const mode = primary
     ? "storybook-button--primary"
@@ -43,14 +43,10 @@ export const Button = ({
       className={["storybook-button", `storybook-button--${size}`, mode].join(
         " "
       )}
-      {...props}
+      style={backgroundColor != null ? { backgroundColor } : undefined}
+      onClick={onClick}
     >
       {label}
-      <style jsx>{`
-        button {
-          background-color: ${backgroundColor};
-        }
-      `}</style>
     </button>
   );
 };

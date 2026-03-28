@@ -1,37 +1,35 @@
 import { MediaQueries } from "@/styles/variables";
-import { useState } from "react";
 import styled from "styled-components";
 
-const SideMenu = ({ navLinks }) => {
-  const [menuStatus, setMenuStatus] = useState("open");
-  const [style, setStyle] = useState("menu active");
+interface NavLinkItem {
+  name: string;
+  stateChanger?: () => void;
+}
 
-  const handleClick = () => {
-    switch (menuStatus) {
-      case "open":
-        setMenuStatus("close");
-        setStyle("menu active");
-        break;
-      case "close":
-        setMenuStatus("open");
-        setStyle("menu");
-        break;
-    }
-  };
+interface SideMenuProps {
+  navLinks: NavLinkItem[];
+}
 
-  const runPropFunction = (stateChanger) => {
-    if (!!stateChanger && typeof stateChanger === "function") {
+const SideMenu = ({ navLinks }: SideMenuProps) => {
+  const runPropFunction = (stateChanger?: () => void) => {
+    if (stateChanger && typeof stateChanger === "function") {
       stateChanger();
     }
   };
 
   return (
     <Wrapper>
-      <div className={style}>
+      <div className="menu active">
         <ul>
           {navLinks.map(({ name, stateChanger }) => (
-            <li onClick={() => runPropFunction(stateChanger)} key={name}>
-              <span>{name}</span>
+            <li key={name}>
+              <button
+                type="button"
+                className="nav-item-button"
+                onClick={() => runPropFunction(stateChanger)}
+              >
+                {name}
+              </button>
             </li>
           ))}
         </ul>
@@ -46,7 +44,6 @@ const Wrapper = styled.div`
   }
 
   .menu {
-    // TODO: Fix Styling to be more dynamic
     background: #34495e;
     min-height: 120%;
     width: 20%;
@@ -55,11 +52,17 @@ const Wrapper = styled.div`
     margin-top: -0.5rem;
     padding-top: 1rem;
 
-    span {
+    .nav-item-button {
       color: #fff;
       text-decoration: none;
       display: block;
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      font: inherit;
       padding: 20px;
+      cursor: pointer;
     }
 
     ul {
@@ -71,13 +74,11 @@ const Wrapper = styled.div`
         border-bottom: 1px solid #fff;
         transition: all 0.25s ease;
         animation: fadeInRight 0.25s ease forwards;
-        /* opacity: 0; */
 
         &:hover {
           opacity: 0.8;
           transition: all 0.25s ease;
           background: #000;
-          cursor: pointer;
         }
       }
     }

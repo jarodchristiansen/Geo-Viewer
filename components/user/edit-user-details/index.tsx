@@ -5,13 +5,22 @@ import Image from "next/image";
 import { useState } from "react";
 import styled from "styled-components";
 
-/**
- *
- * @param user: User associated with the profile
- * @param fetchedUser: User fetched from database to confirm user is associated user
- * @returns EditUserDetails flow that allows user to update their profile components
- */
-const EditUserDetails = ({ user, fetchedUser }) => {
+type UserShape = {
+  name?: string | null;
+  email?: string | null;
+};
+
+type FetchedUserShape = {
+  username?: string | null;
+  image?: string | null;
+};
+
+interface EditUserDetailsProps {
+  user: UserShape;
+  fetchedUser: FetchedUserShape | null;
+}
+
+const EditUserDetails = ({ user, fetchedUser }: EditUserDetailsProps) => {
   const [usernameInput, setUsernameInput] = useState("");
 
   const [updateUsername, { loading, error }] = useMutation(UPDATE_USERNAME);
@@ -27,7 +36,7 @@ const EditUserDetails = ({ user, fetchedUser }) => {
   };
 
   const submitUsernameChange = () => {
-    updateUsername({
+    void updateUsername({
       variables: {
         input: {
           email: user.email,
@@ -42,7 +51,7 @@ const EditUserDetails = ({ user, fetchedUser }) => {
 
   return (
     <>
-      {viewIsMain && (
+      {viewIsMain ? (
         <UserDetailsCard>
           <div className="detail-header">
             <h2>User Details</h2>
@@ -58,33 +67,38 @@ const EditUserDetails = ({ user, fetchedUser }) => {
             <h4>{user?.email}</h4>
           </div>
 
-          {fetchedUser && (
+          {fetchedUser ? (
             <>
               <div className="detail-row">
                 <h4>Username:</h4>
 
                 <h4>{fetchedUser?.username}</h4>
 
-                <span onClick={setEditUsername}>X</span>
+                <IconButton
+                  type="button"
+                  onClick={setEditUsername}
+                  aria-label="Edit username"
+                >
+                  X
+                </IconButton>
               </div>
 
               <div className="detail-row">
                 <h4>Profile Pic:</h4>
                 <Image
-                  src={fetchedUser?.image}
+                  src={fetchedUser?.image ?? "/assets/cube-svgrepo-com.svg"}
                   height={50}
                   width={50}
-                  alt="block-logo"
-                  layout="fixed"
+                  alt="Profile"
                   unoptimized={true}
                 />
               </div>
             </>
-          )}
+          ) : null}
         </UserDetailsCard>
-      )}
+      ) : null}
 
-      {viewIsUsername && (
+      {viewIsUsername ? (
         <UserDetailsCard>
           <div className="detail-header">
             <h2>User Details</h2>
@@ -100,39 +114,62 @@ const EditUserDetails = ({ user, fetchedUser }) => {
             <h4>{user?.email}</h4>
           </div>
 
-          {fetchedUser && (
+          {fetchedUser ? (
             <>
               <div className="detail-row">
                 <h4>Username:</h4>
                 <UserNameInput
-                  placeholder={fetchedUser?.username}
+                  placeholder={fetchedUser?.username ?? ""}
                   onChange={(e) => setUsernameInput(e.target.value)}
                 />
-                {/* <h4>{fetchedUser?.username}</h4> */}
 
-                <span onClick={setEditMain}>Back</span>
+                <IconButton
+                  type="button"
+                  onClick={setEditMain}
+                  aria-label="Back to user details"
+                >
+                  Back
+                </IconButton>
               </div>
 
               <div className="detail-row-inactive">
                 <h4>Profile Pic:</h4>
                 <Image
-                  src={fetchedUser?.image}
+                  src={fetchedUser?.image ?? "/assets/cube-svgrepo-com.svg"}
                   height={50}
                   width={50}
-                  alt="block-logo"
-                  layout="fixed"
+                  alt="Profile"
                   unoptimized={true}
                 />
               </div>
             </>
-          )}
+          ) : null}
 
-          <button onClick={submitUsernameChange}>Submit</button>
+          <div className="detail-row">
+            <button type="button" onClick={submitUsernameChange}>
+              {loading ? "Saving…" : "Submit"}
+            </button>
+          </div>
+
+          {error ? (
+            <p role="alert" className="mutation-error">
+              {error.message}
+            </p>
+          ) : null}
         </UserDetailsCard>
-      )}
+      ) : null}
     </>
   );
 };
+
+const IconButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+  padding: 0;
+`;
 
 const UserNameInput = styled.input`
   padding: 1rem 1rem;
@@ -144,6 +181,11 @@ const UserDetailsCard = styled.div`
   border: 2px solid black;
   border-radius: 14px;
   background-color: ${Colors.lightGray};
+
+  .mutation-error {
+    color: #b00020;
+    padding: 0 1rem 1rem;
+  }
 
   .detail-header {
     display: flex;
@@ -182,7 +224,7 @@ const UserDetailsCard = styled.div`
     overflow-x: auto;
     background-color: #c0bfbf;
     opacity: 0.7;
-    pointer-events: disabled;
+    pointer-events: none;
 
     ::-webkit-scrollbar {
       display: none;

@@ -2,18 +2,12 @@
 const nextJest = require("next/jest");
 
 const createJestConfig = nextJest({
-  // Provide the path to your Next.js app to load next.config.js and .env files in your test environment
   dir: "./",
 });
 
-// Add any custom config to be passed to Jest
 const customJestConfig = {
-  // Add more setup options before each test is run
-  // setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-  // if using TypeScript with a baseUrl set to the root directory then you need the below for alias' to work
   moduleDirectories: ["node_modules", "<rootDir>/"],
   moduleNameMapper: {
-    // Handle module aliases (this will be automatically configured for you soon)
     "^@/components/(.*)$": "<rootDir>/components/$1",
     "^@/styles/(.*)$": "<rootDir>/styles/$1",
     "^@/helpers/(.*)$": "<rootDir>/helpers/$1",
@@ -21,5 +15,19 @@ const customJestConfig = {
   testEnvironment: "jest-environment-jsdom",
 };
 
-// createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
-module.exports = createJestConfig(customJestConfig);
+// next/jest defaults to the @next/swc native transformer. On some Windows installs the
+// downloaded next-swc.win32-x64-msvc.node is invalid ("not a valid Win32 application").
+// That "binary" is a normal compiled addon—nothing suspicious—but Jest workers crash if it
+// won't load. Use Babel for tests instead (same as next build when .babelrc disables SWC).
+const withBabelTransform = async () => {
+  const config = await createJestConfig(customJestConfig)();
+  return {
+    ...config,
+    transform: {
+      ...config.transform,
+      "^.+\\.(js|jsx|ts|tsx|mjs)$": "babel-jest",
+    },
+  };
+};
+
+module.exports = withBabelTransform;

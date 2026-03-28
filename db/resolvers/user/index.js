@@ -25,15 +25,14 @@ export const UserResolver = {
           }
 
           return assetArray;
-        } catch (err) {}
+        } catch (err) {
+          console.error("getAssetPriceData:", err);
+          throw err instanceof Error ? err : new Error(String(err));
+        }
       }
     },
     getUserExchangeData: async (_, { input }) => {
-      const {
-        exchangeData,
-        public_key: publicKey,
-        private_key: privateKey,
-      } = input;
+      const { public_key: publicKey, private_key: privateKey } = input;
 
       const ccxt = require("ccxt");
 
@@ -79,7 +78,7 @@ export const UserResolver = {
 
         return { balances: result };
       } catch (err) {
-        throw new Error(err);
+        throw err instanceof Error ? err : new Error(String(err));
       }
     },
 
@@ -135,7 +134,8 @@ export const UserResolver = {
         }
         return "user not found";
       } catch (err) {
-        throw new Error("Error in removeFavorite!!", err);
+        const msg = err instanceof Error ? err.message : String(err);
+        throw new Error(`Error in removeFavorite: ${msg}`);
       }
     },
 
@@ -161,7 +161,8 @@ export const UserResolver = {
 
         return user;
       } catch (err) {
-        throw new Error("Error in addFavorite!!", err);
+        const msg = err instanceof Error ? err.message : String(err);
+        throw new Error(`Error in addFavorite: ${msg}`);
       }
     },
     updateUsername: async (_, { input }) => {
@@ -170,17 +171,24 @@ export const UserResolver = {
       try {
         let user = await User.findOne({ email });
 
-        let inputMatch = await User.findOne({ username: username });
+        const inputMatch = await User.findOne({ username: username });
 
-        inputMatch && new Error("User name already exists");
+        if (inputMatch) {
+          throw new Error("User name already exists");
+        }
 
-        if (user && !inputMatch) {
+        if (user) {
           user.username = username;
           await user.save();
           return user;
         }
+
+        throw new Error("User not found");
       } catch (err) {
-        throw new Error("Error in updating username!", err);
+        if (err instanceof Error) {
+          throw err;
+        }
+        throw new Error(`Error in updating username: ${String(err)}`);
       }
     },
   },

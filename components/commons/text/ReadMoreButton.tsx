@@ -1,9 +1,12 @@
-import { Colors } from "@/styles/variables";
 import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import styled from "styled-components";
 
-const ReadMoreButton = ({ children }) => {
-  const [currentText, setCurrentText] = useState();
+interface ReadMoreButtonProps {
+  children: string;
+}
+
+const ReadMoreButton = ({ children }: ReadMoreButtonProps) => {
   const [shouldShowReadMore, setShouldShowReadMore] = useState(false);
   const [showMore, setShowMore] = useState(false);
 
@@ -16,21 +19,14 @@ const ReadMoreButton = ({ children }) => {
   const shortenedText = useMemo(() => {
     if (!children) return "N/A";
     if (!shouldShowReadMore || showMore) return children;
-
-    // .replace(/ /g, "")
-    if (!showMore) {
-      return children.slice(0, 250);
-    }
+    return children.slice(0, 250);
   }, [shouldShowReadMore, children, showMore]);
 
   const changeRender = (step: string) => {
-    // step === "Less" && setShowMore(false);
-
     if (step === "Less") {
       setShowMore(false);
       setShouldShowReadMore(true);
     }
-    // step === "More" && setShowMore(true);
     if (step === "More") {
       setShowMore(true);
       setShouldShowReadMore(false);
@@ -39,31 +35,33 @@ const ReadMoreButton = ({ children }) => {
 
   return (
     <ReadMoreWrapper>
-      {!shouldShowReadMore && !showMore && <>{children}</>}
+      {!shouldShowReadMore && !showMore ? (children as ReactNode) : null}
 
-      {shouldShowReadMore && (
+      {shouldShowReadMore ? (
         <div className="content-container">
           {shortenedText}
           <button
+            type="button"
             onClick={() => changeRender("More")}
             className="read-more-text standardized-button"
           >
             Read More
           </button>
         </div>
-      )}
+      ) : null}
 
-      {!shouldShowReadMore && showMore && (
+      {!shouldShowReadMore && showMore ? (
         <div className="content-container">
           {children}
           <button
+            type="button"
             onClick={() => changeRender("Less")}
             className="read-more-text standardized-button"
           >
             Show Less
           </button>
         </div>
-      )}
+      ) : null}
     </ReadMoreWrapper>
   );
 };
