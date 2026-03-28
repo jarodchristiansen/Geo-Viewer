@@ -1,8 +1,9 @@
 {
-  "name": "hodlwatch-updated",
+  "name": "geo-viewer",
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "debug:popper": "node scripts/verify-popper-debug.cjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

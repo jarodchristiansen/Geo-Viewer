@@ -1,12 +1,11 @@
 import { MockedProvider } from "@apollo/client/testing";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 import PaginationComponent from "./Pagination";
 
 describe("Pagination component", () => {
   const active = 1;
   const setOffsetState = jest.fn();
-  const fetchMore = jest.fn();
   const refetch = jest.fn();
 
   it("should render the initial pagination", () => {
@@ -15,7 +14,6 @@ describe("Pagination component", () => {
         <PaginationComponent
           active={active}
           setOffsetState={setOffsetState}
-          fetchMore={fetchMore}
           refetch={refetch}
         />
       </MockedProvider>
@@ -30,7 +28,6 @@ describe("Pagination component", () => {
         <PaginationComponent
           active={active}
           setOffsetState={setOffsetState}
-          fetchMore={fetchMore}
           refetch={refetch}
         />
       </MockedProvider>
@@ -47,7 +44,6 @@ describe("Pagination component", () => {
         <PaginationComponent
           active={active}
           setOffsetState={setOffsetState}
-          fetchMore={fetchMore}
           refetch={refetch}
         />
       </MockedProvider>

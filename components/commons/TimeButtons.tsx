@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from "react";
-
 interface TimeButtonsProps {
   availTimes: number[];
   setTimeQuery: (time: number) => void;
-  refetch: any;
+  refetch: (variables?: { time: number }) => Promise<unknown>;
 }
 
 const TimeButtons = ({
@@ -13,21 +11,18 @@ const TimeButtons = ({
 }: TimeButtonsProps) => {
   return (
     <div>
-      {availTimes &&
-        availTimes.map((time) => (
-          <button
-            key={time}
-            className={"standardized-button"}
-            onClick={() => {
-              setTimeQuery(time);
-              refetch({
-                time,
-              });
-            }}
-          >
-            -{time}-
-          </button>
-        ))}
+      {availTimes?.map((time) => (
+        <button
+          key={time}
+          className="standardized-button"
+          onClick={() => {
+            setTimeQuery(time);
+            void refetch({ time });
+          }}
+        >
+          -{time}-
+        </button>
+      ))}
     </div>
   );
 };

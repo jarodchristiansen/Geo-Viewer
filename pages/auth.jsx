@@ -1,5 +1,5 @@
 import { MediaQueries } from "@/styles/variables";
-import { getProviders, getSession } from "next-auth/react";
+import { getProviders } from "next-auth/react";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
@@ -12,13 +12,10 @@ import SEOHead from "../components/seo/SEOHead";
  * @returns Auth Page connecting to next-auth with oAuth google/github providers
  */
 const AuthPage = () => {
-  const [providers, setProviders] = useState([]);
+  const [providers, setProviders] = useState(null);
 
   async function loadProviders() {
-    let provs = await getProviders();
-    let session = await getSession();
-    // delete providers.credentials;
-
+    const provs = await getProviders();
     setProviders(provs);
   }
 

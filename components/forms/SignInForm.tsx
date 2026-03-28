@@ -1,20 +1,18 @@
 import { Colors, MediaQueries } from "@/styles/variables";
-import { signIn } from "next-auth/react";
+import { signIn, type ClientSafeProvider } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
-// import { ToastContainer } from "react-nextjs-toast";
 import styled from "styled-components";
 
 import ToggleSwitch from "../commons/switchers/toggle-switch";
 import ProviderContainer from "./ProviderContainer/ProviderContainer";
 
-/**
- *
- * @param providers: Sign In Providers github etc.
- * @returns Sign In/Sign Up Forms
- */
-const SignInForm = ({ providers }) => {
+type SignInFormProps = {
+  providers: Record<string, ClientSafeProvider> | null;
+};
+
+const SignInForm = ({ providers }: SignInFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
@@ -41,16 +39,17 @@ const SignInForm = ({ providers }) => {
           break;
         case "password":
           setPassword(e.target.value);
+          break;
         case "passwordConfirm":
+          break;
       }
     }
   };
 
   useEffect(() => {
-    isSignIn
-      ? router.push("/auth?path=SignIn")
-      : router.push("/auth?path=SignUp");
-  }, [isSignIn]);
+    const path = isSignIn ? "SignIn" : "SignUp";
+    void router.push(`/auth?path=${path}`);
+  }, [isSignIn, router]);
 
   return (
     <FormStyling onSubmit={handleSignInSubmit}>
@@ -62,14 +61,9 @@ const SignInForm = ({ providers }) => {
       />
 
       {isSignIn ? (
-        <>
-          {" "}
-          <h1 className="form-header">Sign In</h1>
-        </>
+        <h1 className="form-header">Sign In</h1>
       ) : (
-        <>
-          <h1 className="form-header">Sign Up</h1>
-        </>
+        <h1 className="form-header">Sign Up</h1>
       )}
 
       {isSignIn ? (
@@ -138,7 +132,7 @@ const SignInForm = ({ providers }) => {
             </label>
             <StyledInput
               name={"passwordConfirm"}
-              type="passwordConfirm"
+              type="password"
               className="form-control"
               id="confirmPasswordInput"
               onChange={handleFormChange}
@@ -147,12 +141,6 @@ const SignInForm = ({ providers }) => {
           </div>
         </>
       )}
-
-      {/* <SubmitWrapper>
-        <button type="submit" className="standardized-button">
-          Submit
-        </button>
-      </SubmitWrapper> */}
 
       <CheckMarkContainer>
         <input
@@ -164,10 +152,8 @@ const SignInForm = ({ providers }) => {
 
         <label className="form-check-label">
           <span>You agree to our {"  "}</span>
-          <Link href="/terms-of-service" passHref legacyBehavior>
-            <a target="#">
-              <span className="term-text">Terms of Service</span>
-            </a>
+          <Link href="/terms-of-service" className="term-text">
+            Terms of Service
           </Link>
         </label>
       </CheckMarkContainer>
@@ -185,9 +171,6 @@ const SignInForm = ({ providers }) => {
           isSubmitDisabled={isSubmitDisabled}
         />
       </ProviderWrapper>
-      {/* <ToastContainer position={"bottom"} /> */}
-
-      {/*<ToastHolder />*/}
     </FormStyling>
   );
 };

@@ -1,3 +1,4 @@
+import type { ClientSafeProvider } from "next-auth/react";
 import { signIn } from "next-auth/react";
 import {
   FaCoins,
@@ -9,74 +10,15 @@ import {
 import styled from "styled-components";
 
 interface ProvidersAsProps {
-  providers: {
-    credentials: {
-      callbackUrl: string;
-      id: string;
-      name: string;
-      signinUrl: string;
-      type: string;
-    };
-    facebook: {
-      callbackUrl: string;
-      id: string;
-      name: string;
-      signinUrl: string;
-      type: string;
-    };
-    github: {
-      callbackUrl: string;
-      id: string;
-      name: string;
-      signinUrl: string;
-      type: string;
-    };
-    google: {
-      callbackUrl: string;
-      id: string;
-      name: string;
-      signinUrl: string;
-      type: string;
-    };
-    twitter: {
-      callbackUrl: string;
-      id: string;
-      name: string;
-      signinUrl: string;
-      type: string;
-    };
-  };
+  providers: Record<string, ClientSafeProvider> | null;
   isSubmitDisabled?: boolean;
 }
 
-/**
- *
- * @param providers: Auth Providers github etc...
- * @returns ProviderContainer: Component that shows the sign in provider squares
- */
 const ProviderContainer = ({
   providers,
   isSubmitDisabled,
 }: ProvidersAsProps) => {
-  const signInOthers = async (e, provider) => {
-    // console.log({ provider });
-    // e.preventDefault();
-    // const result = await signIn(
-    //   provider.id
-    //   //     , {
-    //   //   callbackUrl: `${window.location.origin}`,
-    //   // }
-    // );
-    // console.log({ result });
-    //
-    // if (!result?.error) {
-    //   await getSession().then((session) => {
-    //     console.log({ session });
-    //   });
-    // }
-  };
-
-  const selectIcon = (name) => {
+  const selectIcon = (name: string | undefined) => {
     switch (name) {
       case "GitHub":
         return <FaGithub size={28} data-testid="login-github" />;
@@ -93,19 +35,6 @@ const ProviderContainer = ({
     }
   };
 
-  // useEffect(() => {
-  //   handleFormatOnNumberOfProvider();
-  // }, [providers]);
-
-  // const handleFormatOnNumberOfProvider = () => {
-  //   let grid = document.getElementById("auth-provider-grid");
-  //   let childCount = grid?.childElementCount;
-
-  //   childCount && childCount % 2 == 0
-  //     ? grid.classList?.add("row", "row-cols-2")
-  //     : grid.classList?.add("col-8", `col-row-${childCount}`);
-  // };
-
   return (
     <ButtonContainer>
       {providers &&
@@ -115,17 +44,16 @@ const ProviderContainer = ({
               <div key={provider.name}>
                 <ProviderButton
                   disabled={isSubmitDisabled}
-                  onClick={(e) => {
-                    signIn(provider.id, { redirect: true, callbackUrl: "/" })
-                      .then(() => {})
-                      .catch((err) => new Error(err));
-                    // signInOthers(e, provider)
+                  onClick={() => {
+                    void signIn(provider.id, {
+                      redirect: true,
+                      callbackUrl: "/",
+                    });
                   }}
-                  type={"button"}
+                  type="button"
                 >
                   <div className="button-content">
                     {selectIcon(provider?.name)}
-                    {/* <span>{provider?.name}</span> */}
                   </div>
                 </ProviderButton>
               </div>
